@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<!--/* Fragments for the comparison table; never rendered as a page. */-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--/* One app. Unchanged apps start hidden; app.js applies the filters. */-->
+<tr th:fragment="row(row)" th:id="${row.id}" class="app-row"
+    th:attr="data-package=${row.diff.packageName},data-change=${row.diff.change.name()},data-system=${row.diff.system},data-search=${#strings.toLowerCase(row.diff.label + ' ' + row.diff.packageName)}"
+    th:hidden="${!row.diff.change.changed}" hx-indicator="this">
+    <td class="app">
+        <th:block th:replace="~{fragments :: app-icon(${row.diff.iconHash}, ${row.diff.label})}"></th:block>
+        <div>
+            <strong class="app-label" th:text="${row.diff.label}">YouTube</strong>
+            <small class="package" th:text="${row.diff.packageName}">com.google.android.youtube</small>
+            <span th:if="${row.userApp}" class="badge muted" title="Installed by the user or the vendor as a normal app (not part of the system image)">user app</span>        </div>
+    </td>
+    <td><span class="change" th:classappend="${row.diff.change.cssClass}" th:text="${row.diff.change.title}" th:title="${row.diff.change.description}">New app</span></td>
+    <td class="states">
+        <span th:replace="~{fragments :: state(${row.diff.before?.state})}"></span>
+        <span aria-hidden="true">→</span>
+        <span th:replace="~{fragments :: state(${row.diff.after?.state})}"></span>
+    </td>
+    <td class="version">
+        <th:block th:switch="${row.diff.versionChange.name()}">
+            <span th:case="'NONE'" th:text="${row.diff.after?.versionName} ?: (${row.diff.before?.versionName} ?: '—')">1.0</span>
+            <span th:case="*">
+                <span th:text="${row.diff.before.versionName} ?: ''">1.0</span> <small th:text="'(' + ${row.diff.before.versionCode} + ')'">(1)</small> →
+                <span th:text="${row.diff.after.versionName} ?: ''">1.1</span> <small th:text="'(' + ${row.diff.after.versionCode} + ')'">(2)</small>
+                <span class="badge" th:classappend="${row.diff.versionChange.name() == 'UPGRADED'} ? 'muted' : 'warn'"
+                      th:text="${row.diff.versionChange.name() == 'UPGRADED'} ? 'updated' : 'downgraded'">updated</span>
+            </span>
+        </th:block>
+    </td>
+    <td class="current">
+        <span th:if="${row.connected}" th:replace="~{fragments :: state(${row.current?.state})}"></span>
+        <span th:unless="${row.connected}" class="hint">unknown</span>
+    </td>
+    <td class="actions">
+        <form th:if="${row.connected and !row.gone}" class="row-actions"
+              th:hx-target="'#' + ${row.id}" hx-swap="outerHTML">
+            <input type="hidden" name="package" th:value="${row.diff.packageName}">
+            <input type="hidden" name="before" th:value="${comparison.before.id}">
+            <input type="hidden" name="after" th:value="${comparison.after.id}">            <button th:each="action : ${row.actions}" type="button" name="action" th:value="${action.name()}"
+                    th:hx-post="@{/devices/{id}/actions(id=${comparison.device.id})}"                    th:title="${row.actionHint(action)}"
+                    th:text="${action.title}"
+                    th:class="'small action-' + ${#strings.toLowerCase(action.name())} + (${action.name() == 'RESTORE'} ? ' outline' : (${action.name() == 'UNINSTALL'} ? ' danger' : ' secondary'))">Uninstall</button>
+        </form>
+        <small th:if="${row.gone}" class="hint gone-hint">Not on the phone. If you need it, reinstall it from the app store.</small>
+        <small th:if="${row.userApp and row.connected and !row.gone}" class="hint user-app-hint">Uninstall removes it completely.</small>
+    </td>
+</tr>
+
+<!--/* Response of an action: the updated row plus a toast. */-->
+<th:block th:fragment="row-with-toast">
+    <tr th:replace="~{comparison-row :: row(${row})}"></tr>
+    <th:block th:replace="~{fragments :: toast-oob}"></th:block>
+</th:block>
+</body>
+</html>

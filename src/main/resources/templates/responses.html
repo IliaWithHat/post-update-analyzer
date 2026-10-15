@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<!--/* htmx responses: a refreshed part of a page plus a toast. Never rendered as a page. */-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<!--/* Response of "Take snapshot" and "Delete": the refreshed list plus a toast. */-->
+<th:block th:fragment="snapshots-with-toast">
+    <th:block th:replace="~{device :: snapshots}"></th:block>
+    <th:block th:replace="~{fragments :: toast-oob}"></th:block>
+</th:block>
+
+<th:block th:fragment="adb-with-toast">
+    <article th:replace="~{settings :: adb}"></article>
+    <th:block th:replace="~{fragments :: toast-oob}"></th:block>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Settings')}"></head>
+<body>
+<header th:replace="~{fragments :: nav('settings')}"></header>
+<main class="container">
+    <h1>Settings</h1>
+
+    <article id="adb" th:fragment="adb">
+        <header><strong>ADB</strong></header>
+        <p th:if="${adb.available}" id="adb-found">
+            <span class="badge ok">Found</span>
+            <span th:text="${adb.location.version}">Android Debug Bridge version</span><br>
+            <code th:text="${adb.location.path}">/usr/bin/adb</code> <small th:text="'(from ' + ${adb.location.source} + ')'">(PATH)</small>
+        </p>
+        <div th:unless="${adb.available}" id="adb-not-found">
+            <p><span class="badge error">Not found</span> Install
+                <a href="https://developer.android.com/tools/releases/platform-tools" target="_blank" rel="noopener">Android SDK Platform-Tools</a>
+                and enter the path to <code>adb</code> (Linux) or <code>adb.exe</code> (Windows) below.</p>
+        </div>
+        <ul th:unless="${#lists.isEmpty(adb.problems)}" class="warn-text">
+            <li th:each="p : ${adb.problems}" th:text="${p}">problem</li>
+        </ul>
+        <form hx-post="/settings/adb" hx-target="#adb" hx-swap="outerHTML" hx-disabled-elt="find button">
+            <label>Path to adb (file or platform-tools folder)
+                <input type="text" name="path" id="adb-path" th:value="${adb.configuredPath}"
+                       placeholder="e.g. C:\platform-tools\adb.exe or /home/me/platform-tools/adb">
+            </label>
+            <button type="submit" id="save-adb">Save</button>
+        </form>
+        <button class="secondary" id="detect-adb" hx-post="/settings/adb" hx-vals='{"path": ""}'
+                hx-target="#adb" hx-swap="outerHTML">Clear and detect automatically</button>
+        <details th:unless="${#lists.isEmpty(adb.searched)}">
+            <summary>Places that were checked</summary>
+            <ul><li th:each="p : ${adb.searched}"><code th:text="${p}">path</code></li></ul>
+        </details>
+    </article>
+
+    <article>
+        <header><strong>Data</strong></header>
+        <p>Snapshots, history and logs are stored in<br><code th:text="${dataDir}" id="data-dir">/home/me/.local/share/post-update-analyzer</code></p>
+        <p><small>Version <span th:text="${version}">1.0</span></small></p>
+    </article>
+
+    <article>
+        <header><strong>Quit</strong></header>
+        <p>Stops the app. Phones are not affected.</p>
+        <button class="secondary" hx-post="/quit" hx-target="main" hx-swap="innerHTML" id="quit"
+                hx-confirm="Stop Post-Update Analyzer?">Quit the app</button>
+    </article>
+</main>
+<div th:replace="~{fragments :: toasts}"></div>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Phones')}"></head>
+<body>
+<header th:replace="~{fragments :: nav('devices')}"></header>
+<main class="container">
+
+    <section id="devices" th:fragment="devices" hx-get="/fragments/devices" hx-trigger="every 5s" hx-swap="outerHTML">
+
+        <article th:unless="${scan.adb.available}" class="notice error" id="adb-missing">
+            <h3>ADB was not found</h3>
+            <p>This app talks to your phone with ADB (Android Debug Bridge). Install it first:</p>
+            <ol>
+                <li>Download <a href="https://developer.android.com/tools/releases/platform-tools" target="_blank" rel="noopener">Android SDK Platform-Tools</a> and unpack it (or install the <code>adb</code> package on Linux).</li>
+                <li>Open <a th:href="@{/settings}">Settings</a> and enter the path to <code>adb</code> / <code>adb.exe</code>, or add the folder to your PATH.</li>
+            </ol>
+        </article>
+
+        <p th:if="${scan.adb.available}" class="adb-line">
+            <small>ADB: <span th:text="${scan.adb.location.version}">version</span> · <code th:text="${scan.adb.location.path}">path</code></small>
+        </p>
+        <article th:if="${scan.error}" class="notice error" th:text="${scan.error}">error</article>
+
+        <h2>Connected phones</h2>
+        <article th:if="${scan.adb.available and #lists.isEmpty(scan.connected)}" class="notice" id="no-devices">
+            <h3>No phone connected</h3>
+            <ol>
+                <li>On the phone open <em>Settings → About phone</em> and tap <em>Build number</em> 7 times to enable Developer options.</li>
+                <li>In <em>Developer options</em> turn on <em>USB debugging</em>.</li>
+                <li>Connect the phone with a USB cable and accept the <em>Allow USB debugging</em> prompt.</li>
+            </ol>
+        </article>
+
+        <div class="device-grid">
+            <article th:each="d : ${scan.connected}" class="device-card" th:attr="data-serial=${d.adb.serial}">
+                <header>
+                    <strong th:text="${d.record != null} ? ${d.record.displayName} : (${d.adb.model} ?: ${d.adb.serial})">Pixel 7</strong>
+                    <span class="badge" th:classappend="${d.adb.state.name() == 'DEVICE'} ? 'ok' : 'warn'"
+                          th:text="${d.adb.state.name() == 'DEVICE'} ? 'Connected' : ${d.adb.state.adbName}">Connected</span>
+                </header>
+                <p th:if="${d.props}">
+                    Android <span th:text="${d.props.release}">14</span> (API <span th:text="${d.props.sdk}">34</span>)<br>
+                    <small>Build <span th:text="${d.props.displayId}">UP1A</span></small>
+                </p>
+                <p th:if="${d.adb.state.hint}" class="hint" th:text="${d.adb.state.hint}">hint</p>
+                <p th:if="${d.error}" class="hint error" th:text="${d.error}">error</p>
+                <footer>
+                    <small><code th:text="${d.adb.serial}">serial</code></small>
+                    <a th:if="${d.record}" th:href="@{/devices/{id}(id=${d.record.id})}" role="button" class="open-device">Open</a>
+                </footer>
+            </article>
+        </div>
+
+        <th:block th:unless="${#lists.isEmpty(scan.known)}">
+            <h2>All phones</h2>
+            <table class="striped">
+                <thead>
+                <tr><th>Phone</th><th>Snapshots</th><th>Last snapshot</th><th>Status</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="k : ${scan.known}">
+                    <td><strong th:text="${k.device.displayName}">Pixel</strong><br><small><code th:text="${k.device.serialNo}">serial</code></small></td>
+                    <td th:text="${k.snapshotCount}">2</td>
+                    <td th:text="${@fmt.time(k.lastSnapshotAt)}">date</td>
+                    <td><span class="badge" th:classappend="${k.connected} ? 'ok' : 'muted'" th:text="${k.connected} ? 'Connected' : 'Not connected'">Connected</span></td>
+                    <td><a th:href="@{/devices/{id}(id=${k.device.id})}">Open</a></td>
+                </tr>
+                </tbody>
+            </table>
+        </th:block>
+    </section>
+
+    <section class="howto">
+        <h2>How it works</h2>
+        <ol>
+            <li><strong>Before the update:</strong> connect the phone, open it here and take a <em>Before update</em> snapshot.</li>
+            <li>Install the system update on the phone.</li>
+            <li><strong>After the update:</strong> connect the phone again and take an <em>After update</em> snapshot.</li>
+            <li><strong>Compare</strong> them: you see which apps the update installed, reinstalled or turned back on, and can uninstall, disable or restore each one.</li>
+        </ol>
+    </section>
+</main>
+<div th:replace="~{fragments :: toasts}"></div>
+</body>
+</html>

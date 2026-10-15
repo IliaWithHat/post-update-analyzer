@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head(${device.displayName})}"></head>
+<body>
+<header th:replace="~{fragments :: nav('devices')}"></header>
+<main class="container">
+    <hgroup>
+        <h1 th:text="${device.displayName}">Pixel 7</h1>
+        <p>
+            <code th:text="${device.serialNo}">serial</code> ·
+            <span th:if="${live}" class="badge ok">Connected</span>
+            <span th:unless="${live}" class="badge muted">Not connected</span>
+            <th:block th:if="${live}"> · Android <span th:text="${live.props.release}">14</span>, build <span th:text="${live.props.displayId}">UP1A</span></th:block>
+        </p>
+    </hgroup>
+
+    <form th:if="${#lists.size(users) > 1}" method="get" th:action="@{/devices/{id}(id=${device.id})}" class="user-picker">
+        <label>Android user
+            <select name="user" onchange="this.form.submit()">
+                <option th:each="u : ${users}" th:value="${u.id}" th:selected="${u.id == selectedUser}" th:disabled="${u.protected}"
+                        th:text="${u.name} + ' (' + ${u.id} + ')' + (${u.protected} ? ' – not accessible' : '') + (${u.current} ? ' – current' : '')">Owner (0)</option>
+            </select>
+        </label>
+    </form>
+
+    <article th:if="${live}" id="capture">
+        <header><strong>Take a snapshot</strong></header>
+        <p class="hint">
+            Saves the state (enabled, disabled, uninstalled), name and icon of every app on the phone.
+            Take a <em>Before update</em> snapshot now and an <em>After update</em> snapshot once the update is installed.
+        </p>
+        <form th:hx-post="@{/devices/{id}/snapshots(id=${device.id})}" hx-target="#snapshots" hx-swap="outerHTML"
+              hx-disabled-elt="find button" hx-indicator="#capture-progress">
+            <input type="hidden" name="user" th:value="${selectedUser}">
+            <fieldset class="kind-picker">
+                <legend>Snapshot type</legend>
+                <label th:each="k : ${kinds}">
+                    <input type="radio" name="kind" th:value="${k.name()}" th:checked="${k == suggestedKind}">
+                    <span th:text="${k.title}">Before update</span>
+                </label>
+            </fieldset>
+            <label>Note (optional)
+                <input type="text" name="note" maxlength="500" placeholder="e.g. before One UI 7 update">
+            </label>
+            <button type="submit" id="take-snapshot">Take snapshot</button>
+            <span id="capture-progress" class="htmx-indicator" aria-busy="true">Reading all apps from the phone… this can take up to a minute.</span>
+        </form>
+    </article>
+    <article th:unless="${live}" class="notice">
+        Connect this phone (USB debugging on) to take new snapshots or change apps. You can still compare existing snapshots.
+    </article>
+
+    <section id="snapshots" th:fragment="snapshots">
+        <h2>Snapshots</h2>
+        <form th:if="${#lists.size(userSnapshots) >= 2}" method="get" th:action="@{/compare}" class="compare-form" id="compare-form">
+            <label>Before
+                <select name="before">
+                    <option th:each="s : ${userSnapshots}" th:value="${s.id}" th:selected="${s.id == defaultBefore}"
+                            th:text="${s.kind.title} + ' · ' + ${@fmt.time(s.createdAt)}">snapshot</option>
+                </select>
+            </label>
+            <label>After
+                <select name="after">
+                    <option th:each="s : ${userSnapshots}" th:value="${s.id}" th:selected="${s.id == defaultAfter}"
+                            th:text="${s.kind.title} + ' · ' + ${@fmt.time(s.createdAt)}">snapshot</option>
+                </select>
+            </label>
+            <button type="submit" id="compare-button">Compare</button>
+        </form>
+        <p th:if="${#lists.size(userSnapshots) < 2}" class="hint">
+            Take two snapshots of this user (before and after the update) to compare them.
+        </p>
+
+        <table class="striped" th:unless="${#lists.isEmpty(snapshots)}" id="snapshot-table">
+            <thead>
+            <tr><th>Taken</th><th>Type</th><th>User</th><th>Build</th><th>Apps</th><th>Names &amp; icons</th><th>Note</th><th></th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="s : ${snapshots}" th:attr="data-snapshot-id=${s.id},data-kind=${s.kind.name()}">
+                <td th:text="${@fmt.time(s.createdAt)}">date</td>
+                <td><span class="badge" th:classappend="${#strings.toLowerCase(s.kind.name())}" th:text="${s.kind.title}">Before</span></td>
+                <td th:text="${s.androidUserId}">0</td>
+                <td><span th:text="${s.build.displayId}" th:title="${s.build.fingerprint}">build</span><br>
+                    <small>Android <span th:text="${s.build.androidRelease}">14</span><th:block th:if="${s.build.securityPatch}">, patch <span th:text="${s.build.securityPatch}"></span></th:block></small></td>
+                <td th:text="${s.packageCount}">200</td>
+                <td><span th:text="${s.metadataStatus.title}" th:title="${s.metadataMessage}" th:classappend="${s.metadataStatus.name() == 'FULL'} ? '' : 'warn-text'">ok</span></td>
+                <td th:text="${s.note}">note</td>
+                <td th:with="actions=${actionCounts.get(s.id)}">
+                    <!--/* Pico ignores the mouse on disabled buttons, so the tooltip sits on a wrapper. */-->
+                    <span th:if="${actions}" class="delete-blocked"
+                          th:title="|Used by ${@fmt.count(actions, 'action')} in History, so it cannot be deleted.|">
+                        <button class="outline secondary small delete-snapshot" disabled>Delete</button>
+                    </span>
+                    <button th:unless="${actions}" class="outline secondary small delete-snapshot" th:hx-delete="@{/snapshots/{id}(id=${s.id})}"
+                            hx-target="#snapshots" hx-swap="outerHTML"
+                            th:with="taken=${@fmt.time(s.createdAt)}"
+                            th:hx-confirm="|Delete the snapshot taken ${taken}? This cannot be undone.|">Delete</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+<div th:replace="~{fragments :: toasts}"></div>
+</body>
+</html>

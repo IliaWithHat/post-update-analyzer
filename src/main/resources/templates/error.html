@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Error')}"></head>
+<body>
+<header th:replace="~{fragments :: nav('')}"></header>
+<main class="container">
+    <h1>Something went wrong</h1>
+    <article class="notice error">
+        <p th:text="${message} ?: 'Unexpected error.'" id="error-message">message</p>
+        <small th:if="${status}" th:text="'Error ' + ${status}">Error 500</small>
+    </article>
+    <p>
+        <a th:if="${adbMissing}" th:href="@{/settings}" role="button">Set up ADB</a>
+        <a th:href="@{/}" role="button" class="secondary">Back to phones</a>
+    </p>
+</main>
+<div th:replace="~{fragments :: toasts}"></div>
+</body>
+</html>

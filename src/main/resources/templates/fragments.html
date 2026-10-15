@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <!-- Error responses are swapped too, so their out-of-band toasts show up; HX-Reswap:none keeps the page as is. -->
+    <meta name="htmx-config"
+          content='{"responseHandling":[{"code":"204","swap":false},{"code":"[23]..","swap":true},{"code":"[45]..","swap":true,"error":true}],"defaultSwapStyle":"outerHTML"}'>
+    <title th:text="${title} + ' · Post-Update Analyzer'">Post-Update Analyzer</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/img/app-icon.svg}">
+    <link rel="stylesheet" th:href="@{/webjars/picocss__pico/css/pico.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <script th:src="@{/webjars/htmx.org/dist/htmx.min.js}" defer></script>
+    <script th:src="@{/js/app.js}" defer></script>
+</head>
+<body>
+
+<header th:fragment="nav(active)" class="app-header">
+    <nav class="container-fluid">
+        <ul>
+            <li><a th:href="@{/}" class="brand"><img th:src="@{/img/app-icon.svg}" alt="" width="28" height="28"> Post-Update Analyzer</a></li>
+        </ul>
+        <ul>
+            <li><a th:href="@{/}" th:classappend="${active == 'devices'} ? 'active'" th:attr="aria-current=${active == 'devices'} ? 'page'">Phones</a></li>
+            <li><a th:href="@{/history}" th:classappend="${active == 'history'} ? 'active'" th:attr="aria-current=${active == 'history'} ? 'page'">History</a></li>
+            <li><a th:href="@{/settings}" th:classappend="${active == 'settings'} ? 'active'" th:attr="aria-current=${active == 'settings'} ? 'page'">Settings</a></li>
+        </ul>
+    </nav>
+</header>
+
+<div th:fragment="toasts" id="toasts" class="toasts" aria-live="polite"></div>
+
+<!--/* Appended to #toasts by htmx (out-of-band swap). Model: toastMessage, toastKind, toastDetail. */-->
+<div th:fragment="toast-oob" id="toasts" hx-swap-oob="beforeend">
+    <div class="toast" th:classappend="${toastKind}" role="status">
+        <strong th:text="${toastMessage}">Message</strong>
+        <div th:if="${toastDetail}" th:text="${toastDetail}" class="toast-detail"></div>
+    </div>
+</div>
+
+<th:block th:fragment="app-icon(hash, label)">
+    <img th:if="${hash}" class="app-icon" th:src="@{/icons/{h}.png(h=${hash})}" alt="" loading="lazy" width="40" height="40">
+    <span th:unless="${hash}" class="app-icon avatar" th:style="'--hue:' + ${@fmt.hue(label)}" th:text="${@fmt.initial(label)}" aria-hidden="true">A</span>
+</th:block>
+
+<!--/* state: PackageState or null (= not on the phone) */-->
+<span th:fragment="state(state)" class="state"
+      th:classappend="${state == null} ? 'state-gone' : ('state-' + ${#strings.toLowerCase(state.name())})"
+      th:text="${state == null} ? 'Not on phone' : ${state.title}">Enabled</span>
+
+<div th:fragment="goodbye" id="goodbye" class="container goodbye">
+    <h1>Post-Update Analyzer has stopped</h1>
+    <p>You can close this tab. Start the app again to continue.</p>
+</div>
+
+</body>
+</html>

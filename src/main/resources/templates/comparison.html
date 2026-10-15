@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Changes')}"></head>
+<body>
+<header th:replace="~{fragments :: nav('devices')}"></header>
+<main class="container-fluid comparison">
+    <hgroup>
+        <h1>Changes on <a th:href="@{/devices/{id}(id=${comparison.device.id})}" th:text="${comparison.device.displayName}">Pixel</a></h1>
+        <p>
+            <span th:text="${comparison.before.kind.title}">Before update</span> (<span th:text="${@fmt.time(comparison.before.createdAt)}"></span>)
+            →
+            <span th:text="${comparison.after.kind.title}">After update</span> (<span th:text="${@fmt.time(comparison.after.createdAt)}"></span>)
+            · Android user <span th:text="${comparison.after.androidUserId}">0</span>
+        </p>
+    </hgroup>
+
+    <div class="build-grid">
+        <article>
+            <header><strong>Before</strong></header>
+            <p>Build <strong th:text="${comparison.before.build.displayId}">build</strong><br>
+                <small>Android <span th:text="${comparison.before.build.androidRelease}"></span> · patch <span th:text="${comparison.before.build.securityPatch}"></span></small><br>
+                <small><code th:text="${comparison.before.build.fingerprint}">fingerprint</code></small></p>
+        </article>
+        <article>
+            <header><strong>After</strong></header>
+            <p>Build <strong th:text="${comparison.after.build.displayId}">build</strong><br>
+                <small>Android <span th:text="${comparison.after.build.androidRelease}"></span> · patch <span th:text="${comparison.after.build.securityPatch}"></span></small><br>
+                <small><code th:text="${comparison.after.build.fingerprint}">fingerprint</code></small></p>
+        </article>
+    </div>
+
+    <article th:unless="${comparison.buildChanged}" class="notice" id="same-build">
+        Both snapshots have the same system build. If you expected an update between them, it may not have been installed yet.
+    </article>
+    <article th:if="${comparison.swapped}" class="notice">The snapshots were picked in reverse order, so the older one is shown as "before".</article>
+    <article th:each="s : ${ {comparison.before, comparison.after} }" th:if="${s.metadataStatus.name() != 'FULL'}" class="notice">
+        <span th:text="${s.kind.title}"></span> snapshot: <span th:text="${s.metadataStatus.title}"></span>
+        <small th:if="${s.metadataMessage}" th:text="'(' + ${s.metadataMessage} + ')'"></small>.
+        Apps without a name are shown by package name.
+    </article>
+    <article th:unless="${page.live}" class="notice" id="not-connected">
+        The phone is not connected, so the current state is unknown and apps cannot be changed. Connect it and reload this page.
+    </article>
+    <article th:if="${page.liveError}" class="notice error" th:text="'Could not read the current state from the phone: ' + ${page.liveError}"></article>
+
+    <form id="filters" class="filters" onsubmit="return false">
+        <fieldset class="chips">
+            <label th:each="type : ${page.changedTypes}" class="chip" th:classappend="${type.cssClass}" th:title="${type.description}">
+                <input type="checkbox" name="type" th:value="${type.name()}" checked>
+                <span th:text="${type.title}">New app</span>
+                <span class="count" th:text="${comparison.counts.get(type)}">3</span>
+            </label>
+            <label class="chip muted" title="Apps whose state did not change (including apps that only got a new version)">
+                <input type="checkbox" id="show-unchanged">
+                <span>Show unchanged apps</span>
+                <span class="count" th:text="${comparison.counts.get(T(com.ilia.postupdateanalyzer.compare.model.ChangeType).UNCHANGED)}">100</span>
+            </label>
+        </fieldset>
+        <div class="filter-row">
+            <input type="search" id="search" placeholder="Search by name or package" aria-label="Search">
+            <select id="app-kind" aria-label="App type">
+                <option value="all">All apps</option>
+                <option value="system">System apps</option>
+                <option value="user">User-installed apps</option>
+            </select>
+        </div>
+        <p class="hint"><span id="shown-count"></span></p>
+    </form>
+
+    <p th:if="${comparison.changedCount == 0}" class="notice" id="no-changes">
+        No app changed its state between these snapshots.
+    </p>
+
+    <figure>
+        <table id="apps" class="apps striped">
+            <thead>
+            <tr>
+                <th>App</th>
+                <th>Change</th>
+                <th>Before → After</th>
+                <th>Version</th>
+                <th>On the phone now</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <th:block th:each="row : ${page.rows}">
+                <tr th:replace="~{comparison-row :: row(${row})}"></tr>
+            </th:block>
+            <tr id="no-match" hidden><td colspan="6">No apps match the filters.</td></tr>
+            </tbody>
+        </table>
+    </figure>
+</main>
+<div th:replace="~{fragments :: toasts}"></div>
+</body>
+</html>

@@ -1,0 +1,20 @@
+spring:
+  application.name: post-update-analyzer
+  datasource:
+    url: jdbc:sqlite:${app.data-dir}/post-update-analyzer.db?foreign_keys=true&journal_mode=WAL&busy_timeout=10000
+    hikari.maximum-pool-size: 4
+  flyway.locations: classpath:db/migration
+  thymeleaf.cache: true
+  web.error.whitelabel.enabled: true
+  main.banner-mode: off
+
+server.address: 127.0.0.1
+
+app:
+  command-timeout: 60s
+  transfer-timeout: 5m
+  helper-timeout: 3m
+  icon-size: 96
+
+logging.level:
+  com.ilia.postupdateanalyzer: info

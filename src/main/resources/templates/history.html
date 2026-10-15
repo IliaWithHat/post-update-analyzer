@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('History')}"></head>
+<body>
+<header th:replace="~{fragments :: nav('history')}"></header>
+<main class="container-fluid">
+    <h1>History</h1>
+    <p class="hint">Every action you ran on a phone, grouped by the comparison it was run from. Newest first.</p>
+
+    <form method="get" th:action="@{/history}" class="filter-row" id="history-filters">
+        <select name="device" aria-label="Phone" onchange="this.form.submit()">
+            <option value="">All phones</option>
+            <option th:each="d : ${devices}" th:value="${d.id}" th:selected="${d.id == selectedDevice}" th:text="${d.displayName}">Pixel</option>
+        </select>
+        <select name="status" aria-label="Result" onchange="this.form.submit()">
+            <option value="">All results</option>
+            <option th:each="s : ${statuses}" th:value="${s.name()}" th:selected="${s == selectedStatus}" th:text="${s.title}">Done</option>
+        </select>
+    </form>
+
+    <p th:if="${#lists.isEmpty(groups)}" class="notice" id="history-empty">No actions yet.</p>
+
+    <div th:unless="${#lists.isEmpty(groups)}" id="history-groups">
+        <article th:each="g : ${groups}" class="history-group" th:id="${g.id}" th:attr="data-before=${g.before.id},data-after=${g.after.id}">
+            <header>
+                <div>
+                    <strong th:text="${g.device.displayName}">Pixel</strong>
+                    · user <span th:text="${g.after.androidUserId}">0</span>
+                    · <span th:text="${@fmt.count(#lists.size(g.entries), 'action')}">3 actions</span>
+                    <br>
+                    <span th:text="${g.before.kind.title}">Before update</span> (<span th:text="${@fmt.time(g.before.createdAt)}"></span>)
+                    →
+                    <span th:text="${g.after.kind.title}">After update</span> (<span th:text="${@fmt.time(g.after.createdAt)}"></span>)
+                    <br>
+                    <small>Build <span th:text="${g.before.build.displayId}" th:title="${g.before.build.fingerprint}">UP1A</span>
+                        → <span th:text="${g.after.build.displayId}" th:title="${g.after.build.fingerprint}">UP1B</span></small>
+                </div>
+                <a th:href="@{/compare(before=${g.before.id},after=${g.after.id})}" role="button" class="outline small open-comparison">Open comparison</a>
+            </header>
+            <table class="striped history-table">
+                <thead>
+                <tr><th>Time</th><th>App</th><th>Action</th><th>State</th><th>Result</th><th>Details</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="e : ${g.entries}" th:attr="data-package=${e.packageName},data-status=${e.status.name()},data-action=${e.action.name()}">
+                    <td th:text="${@fmt.time(e.createdAt)}">time</td>
+                    <td><strong th:text="${e.displayName}">App</strong><br><small class="package" th:text="${e.packageName}">pkg</small></td>
+                    <td th:text="${e.action.title}">Uninstall</td>
+                    <td class="states">
+                        <span th:replace="~{fragments :: state(${e.stateBefore})}"></span>
+                        <span aria-hidden="true">→</span>
+                        <span th:replace="~{fragments :: state(${e.stateAfter})}"></span>
+                    </td>
+                    <td><span class="badge" th:classappend="${e.status.name() == 'SUCCESS'} ? 'ok' : (${e.status.name() == 'FAILED'} ? 'error' : 'muted')" th:text="${e.status.title}">Done</span></td>
+                    <td>
+                        <span th:text="${e.message}">message</span>
+                        <div th:if="${e.warning}" class="warn-text" th:text="${e.warning}">warning</div>
+                        <details th:if="${e.commands}">
+                            <summary>Commands (<span th:text="${@fmt.duration(e.durationMs)}">1 s</span>)</summary>
+                            <pre th:text="${e.output} ?: ${e.commands}">output</pre>
+                        </details>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </article>
+    </div>
+</main>
+<div th:replace="~{fragments :: toasts}"></div>
+</body>
+</html>

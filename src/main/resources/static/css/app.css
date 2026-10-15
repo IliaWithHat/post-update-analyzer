@@ -1,0 +1,367 @@
+/* Small additions on top of Pico CSS. Colors follow Pico's light/dark variables. */
+:root {
+    --pua-ok: #2e7d32;
+    --pua-warn: #b26a00;
+    --pua-danger: #c62828;
+    --pua-info: #1565c0;
+    --pua-muted: var(--pico-muted-color);
+    --pua-badge-bg: var(--pico-secondary-background);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --pua-ok: #81c784;
+        --pua-warn: #ffb74d;
+        --pua-danger: #ef9a9a;
+        --pua-info: #90caf9;
+    }
+}
+
+/* Pico grows the root font on wide screens (100% … 131.25%); everything here is in rem, so this scales the UI to 80%. */
+:root {
+    --pico-font-size: 80%;
+}
+
+@media (min-width: 576px) {
+    :root {
+        --pico-font-size: 85%;
+    }
+}
+
+@media (min-width: 768px) {
+    :root {
+        --pico-font-size: 90%;
+    }
+}
+
+@media (min-width: 1024px) {
+    :root {
+        --pico-font-size: 95%;
+    }
+}
+
+@media (min-width: 1280px) {
+    :root {
+        --pico-font-size: 100%;
+    }
+}
+
+@media (min-width: 1536px) {
+    :root {
+        --pico-font-size: 105%;
+    }
+}
+
+body {
+    min-height: 100vh;
+}
+
+.app-header {
+    border-bottom: 1px solid var(--pico-muted-border-color);
+    margin-bottom: 1.5rem;
+}
+
+.app-header .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.app-header a.active {
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.hint {
+    color: var(--pua-muted);
+}
+
+.notice {
+    border-left: 4px solid var(--pua-info);
+}
+
+.notice.error {
+    border-left-color: var(--pua-danger);
+}
+
+.warn-text {
+    color: var(--pua-warn);
+}
+
+/* Badges */
+.badge, .change, .state {
+    display: inline-block;
+    padding: .1rem .5rem;
+    border-radius: 1rem;
+    font-size: .8rem;
+    line-height: 1.4;
+    white-space: nowrap;
+    border: 1px solid currentColor;
+}
+
+.badge.ok, .state-enabled {
+    color: var(--pua-ok);
+}
+
+.badge.warn, .badge.before_update {
+    color: var(--pua-warn);
+}
+
+.badge.error, .change.danger {
+    color: var(--pua-danger);
+}
+
+.badge.after_update, .change.info, .state-disabled {
+    color: var(--pua-info);
+}
+
+.badge.muted, .badge.other, .change.muted, .state-uninstalled, .state-gone {
+    color: var(--pua-muted);
+}
+
+.state-gone {
+    border-style: dashed;
+}
+
+.change.danger {
+    font-weight: 700;
+}
+
+/* Phones */
+.device-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    gap: 1rem;
+}
+
+.device-card header, .device-card footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .5rem;
+}
+
+.kind-picker label {
+    display: inline-flex;
+    margin-right: 1.5rem;
+}
+
+.compare-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: end;
+}
+
+.compare-form label {
+    flex: 1 1 14rem;
+}
+
+/* A disabled button ignores the mouse (Pico), so its wrapper shows the tooltip. */
+.delete-blocked {
+    display: inline-block;
+    cursor: not-allowed;
+}
+
+/* History */
+#history-groups {
+    margin-top: 1.5rem;
+}
+
+.history-group > header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+}
+
+.history-group table {
+    margin-bottom: 0;
+}
+
+/* Comparison */
+.build-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    gap: 1rem;
+}
+
+.build-grid code {
+    word-break: break-all;
+}
+
+.filters .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-bottom: .5rem;
+}
+
+.chip {
+    display: inline-flex !important;
+    align-items: center;
+    gap: .35rem;
+    padding: .25rem .75rem;
+    border: 1px solid var(--pico-muted-border-color);
+    border-radius: 2rem;
+    cursor: pointer;
+    width: auto !important;
+    margin: 0 !important;
+}
+
+.chip input {
+    margin: 0 !important;
+}
+
+.chip.danger {
+    border-color: var(--pua-danger);
+}
+
+.chip .count {
+    font-weight: 700;
+}
+
+.filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.filter-row > *, .filter-row > input, .filter-row > select {
+    flex: 1 1 14rem;
+    margin-bottom: 0;
+    height: 3rem;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+table.apps td {
+    vertical-align: middle;
+}
+
+td.app {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    min-width: 16rem;
+}
+
+td.app small {
+    display: block;
+}
+
+.package {
+    color: var(--pua-muted);
+    font-family: var(--pico-font-family-monospace);
+    word-break: break-all;
+}
+
+.app-icon {
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border-radius: 10px;
+}
+
+.avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: white;
+    background: hsl(var(--hue), 45%, 45%);
+}
+
+td.states {
+    white-space: nowrap;
+}
+
+td.actions {
+    min-width: 13rem;
+}
+
+.row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+    margin: 0;
+}
+
+button.small, a.small[role=button] {
+    padding: .25rem .6rem;
+    font-size: .85rem;
+    width: auto;
+    margin: 0;
+}
+
+button.danger {
+    --pico-background-color: var(--pua-danger);
+    --pico-border-color: var(--pua-danger);
+    --pico-color: #fff;
+}
+
+tr.htmx-request {
+    opacity: .5;
+    pointer-events: none;
+}
+
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request .htmx-indicator, .htmx-request.htmx-indicator {
+    display: inline-block;
+    margin-left: 1rem;
+}
+
+/* Toasts */
+.toasts {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    max-width: min(32rem, calc(100vw - 2rem));
+    z-index: 100;
+}
+
+.toast {
+    padding: .75rem 1rem;
+    border-radius: var(--pico-border-radius);
+    background: var(--pico-card-background-color);
+    box-shadow: var(--pico-card-box-shadow);
+    border-left: 5px solid var(--pua-info);
+    cursor: pointer;
+}
+
+.toast.success {
+    border-left-color: var(--pua-ok);
+}
+
+.toast.warning {
+    border-left-color: var(--pua-warn);
+}
+
+.toast.error {
+    border-left-color: var(--pua-danger);
+}
+
+.toast-detail {
+    font-size: .85rem;
+    color: var(--pua-muted);
+}
+
+pre {
+    white-space: pre-wrap;
+    max-height: 20rem;
+    font-size: .8rem;
+}
+
+.goodbye {
+    text-align: center;
+    padding-top: 4rem;
+}
